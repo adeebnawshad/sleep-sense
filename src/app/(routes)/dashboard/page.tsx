@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { format } from "date-fns";
@@ -8,16 +8,103 @@ import {
   LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, ScatterChart, Scatter, ZAxis
 } from "recharts";
 import Link from "next/link";
-
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const sleepData = [
-    { date: "2025-05-01", bedtime: 22, wake: 6, duration: 8, restfulness: 4, caffeine: 15, stress: 3 },
-    { date: "2025-05-02", bedtime: 23, wake: 7, duration: 8, restfulness: 3, caffeine: 16, stress: 4 },
-    { date: "2025-05-03", bedtime: 0, wake: 8, duration: 8, restfulness: 2, caffeine: 17, stress: 5 },
-    // ...more data
-  ];
+  const [sleepData, setSleepData] = useState<any[]>([]);
+
+  // Fetch data from Supabase on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase
+        .from("daily_inputs")
+        .select("*")
+        .order("bedtime", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching data:", error);
+      } else {
+        // Optional: parse/format fields like duration or time
+        setSleepData(data.map((entry) => ({
+          date: entry.bedtime?.split("T")[0],
+          duration: calculateSleepDuration(entry.bedtime, entry.wake_time),
+          restfulness: Number(entry.restfulness),
+          caffeine: entry.caffeine_time ? parseHour(entry.caffeine_time) : null,
+          stress: Number(entry.stress),
+          bedtime: parseHour(entry.bedtime),
+          wake: parseHour(entry.wake_time),
+        })));
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Helpers
+  const calculateSleepDuration = (bedtime: string, wakeTime: string) => {
+    if (!bedtime || !wakeTime) return null;
+    const bed = new Date(bedtime);
+    const wake = new Date(wakeTime);
+    const hours = (wake.getTime() - bed.getTime()) / (1000 * 60 * 60);
+    return parseFloat(hours.toFixed(1));
+  };
+
+  const parseHour = (timeStr: string) => {
+    if (!timeStr) return null;
+    const date = new Date(timeStr);
+    return date.getHours() + date.getMinutes() / 60;
+  };
+
+  const average = (arr: number[] | (number | null)[]) => {
+  const valid = arr.filter((n): n is number => typeof n === 'number');
+  if (valid.length === 0) return null;
+  return valid.reduce((a, b) => a + b, 0) / valid.length;
+};
+
+const formatHour = (hour: number | null) => {
+  if (hour === null || isNaN(hour)) return "—";
+  const h = Math.floor(hour);
+  const m = Math.round((hour - h) * 60);
+  const time = new Date();
+  time.setHours(h);
+  time.setMinutes(m);
+  return time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
+const formatHourLabel = (hourDecimal: number) => {
+  if (hourDecimal == null) return "";
+  const hour = Math.floor(hourDecimal);
+  const minutes = Math.round((hourDecimal - hour) * 60);
+  const date = new Date();
+  date.setHours(hour, minutes);
+  return format(date, "h:mm a");
+};
+
+
+const calculateConsistency = (data: any[]) => {
+  if (data.length < 2) return "—";
+
+  const bedtimes = data.map(d => new Date(d.bedtime).getTime()).filter(t => !isNaN(t));
+  const waketimes = data.map(d => new Date(d.wake_time).getTime()).filter(t => !isNaN(t));
+
+  if (bedtimes.length !== waketimes.length) return "—";
+
+  const avgBedtime = bedtimes.reduce((a, b) => a + b, 0) / bedtimes.length;
+  const avgWake = waketimes.reduce((a, b) => a + b, 0) / waketimes.length;
+
+  const THIRTY_MIN_MS = 30 * 60 * 1000;
+
+  const consistentDays = bedtimes.reduce((count, bed, i) => {
+    const wake = waketimes[i];
+    const isBedConsistent = Math.abs(bed - avgBedtime) <= THIRTY_MIN_MS;
+    const isWakeConsistent = Math.abs(wake - avgWake) <= THIRTY_MIN_MS;
+    return isBedConsistent && isWakeConsistent ? count + 1 : count;
+  }, 0);
+
+  const score = (consistentDays / bedtimes.length) * 100;
+  return score.toFixed(0);
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-blue-900 text-white p-6">
@@ -34,30 +121,76 @@ export default function Dashboard() {
 
       {/* 2. Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-indigo-600 p-4 rounded-xl shadow">🛌 <p>Avg Sleep: 7.8 hrs</p></div>
-        <div className="bg-green-600 p-4 rounded-xl shadow">😌 <p>Avg Restfulness: 3.7</p></div>
-        <div className="bg-yellow-600 p-4 rounded-xl shadow">☕ <p>Avg Caffeine Time: 3:45 PM</p></div>
-        <div className="bg-purple-600 p-4 rounded-xl shadow">🔁 <p>Consistency Score: 82%</p></div>
+        <div className="bg-indigo-600 p-4 rounded-xl shadow">
+          🛌 <p>Avg Sleep: {average(sleepData.map(d => d.duration))?.toFixed(1) ?? "—"} hrs</p>
+        </div>
+        <div className="bg-green-600 p-4 rounded-xl shadow">
+          😌 <p>Avg Restfulness: {average(sleepData.map(d => d.restfulness))?.toFixed(1) ?? "—"}</p>
+        </div>
+        <div className="bg-yellow-600 p-4 rounded-xl shadow">
+          ☕ <p>
+            Avg Caffeine Time: {
+              formatHour(average(sleepData.map(d => d.caffeine).filter(v => v !== null)))
+            }
+          </p>
+        </div>
+        <div className="bg-purple-600 p-4 rounded-xl shadow">
+          🔁 <p>Consistency Score: {calculateConsistency(sleepData)}%</p>
+        </div>
       </div>
+
 
       {/* 3. Trends Section */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {/* a. Sleep Trends */}
+        {/* a. Sleep Duration Trends */}
         <div className="bg-gray-800 p-4 rounded-xl">
-          <h2 className="text-xl font-semibold mb-2">Sleep Trends</h2>
+          <h2 className="text-xl font-semibold mb-2">Sleep Duration Trends</h2>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={sleepData}>
-              <Line type="monotone" dataKey="bedtime" stroke="#8884d8" name="Bedtime (24h)" />
-              <Line type="monotone" dataKey="wake" stroke="#82ca9d" name="Wake Time (24h)" />
-              <Line type="monotone" dataKey="duration" stroke="#ffc658" name="Duration (hrs)" />
+            <BarChart data={sleepData}>
               <CartesianGrid stroke="#444" />
               <XAxis dataKey="date" />
-              <YAxis />
+              <YAxis domain={[0, 12]} />
               <Tooltip />
               <Legend />
-            </LineChart>
+              <Bar dataKey="duration" fill="#ffc658" name="Sleep Duration (hrs)" />
+            </BarChart>
           </ResponsiveContainer>
         </div>
+
+        {/* 7. Bedtime and Wake Time Line Graphs */}
+        <div className="grid md:grid-cols-2 gap-6 mt-8">
+          {/* Bedtime Line Chart */}
+          <div className="bg-gray-800 p-4 rounded-xl">
+            <h2 className="text-xl font-semibold mb-2">Bedtime Trends</h2>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={sleepData}>
+                <CartesianGrid stroke="#444" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[18, 30]} tickFormatter={formatHourLabel} />
+                <Tooltip formatter={(value: number) => formatHourLabel(value)} />
+                <Line type="monotone" dataKey="bedtime" stroke="#7c3aed" name="Bedtime" />
+                <Legend />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Wake-up Line Chart */}
+          <div className="bg-gray-800 p-4 rounded-xl">
+            <h2 className="text-xl font-semibold mb-2">Wake-up Trends</h2>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={sleepData}>
+                <CartesianGrid stroke="#444" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[4, 12]} tickFormatter={formatHourLabel} />
+                <Tooltip formatter={(value: number) => formatHourLabel(value)} />
+                <Line type="monotone" dataKey="wake" stroke="#10b981" name="Wake-up Time" />
+                <Legend />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+
 
         {/* b. Restfulness vs Factors */}
         <div className="bg-gray-800 p-4 rounded-xl">

@@ -84,7 +84,11 @@ export default function DailyInputPage() {
     return input;
   }
   return null;
-};
+  };
+
+  const sanitizeIntensity = (val: any) =>
+  typeof val === "string" && val.trim() ? val : null;
+
 
   const insertDailyInput = async (formData: any) => {
   const { data, error } = await supabase
@@ -108,7 +112,7 @@ export default function DailyInputPage() {
 
       disturbances: formData.hadDisturbances === "yes" ? [{ duration: formData.awakeDuration }] : [],
       exercise: formData.exercised,
-      exercise_intensity: formData.exerciseIntensity,
+      exercise_intensity: sanitizeIntensity(formData.exerciseIntensity),
       exercise_time: sanitizeTime(formData.exerciseTime),
 
       stress: formData.stressLevel,
