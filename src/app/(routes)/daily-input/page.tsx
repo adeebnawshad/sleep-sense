@@ -22,6 +22,7 @@ export default function DailyInputPage() {
     bedtime: "",
     wakeTime: "",
     sleepLatency: "",
+    customLatency: "",
     restedRating: "",
     hadDisturbances: "",
     awakeDuration: "",
@@ -36,6 +37,7 @@ export default function DailyInputPage() {
     screenTime: "",
     blueLightFilter: "",
     brightLight: "",
+    had_alcohol: "",
     roomTemp: "",
     stressLevel: "",
   });
@@ -43,13 +45,14 @@ export default function DailyInputPage() {
   const requiredStepFields = {
     1: ["bedtime", "wakeTime", "sleepLatency", "restedRating", "hadDisturbances", "awakeDuration"],
     2: ["morningLight", "hadCaffeine", "caffeineTime", "lastMealTime", "exercised", "exerciseIntensity", "exerciseTime"],
-    3: ["screenTime", "blueLightFilter", "brightLight", "roomTemp", "stressLevel"],
+    3: ["screenTime", "blueLightFilter", "brightLight", "had_alcohol", "roomTemp", "stressLevel"],
   };
 
   const isStepValid = () => {
     const fields = requiredStepFields[step] || [];
     for (const field of fields) {
       if ((field === "awakeDuration" && formData.hadDisturbances === "no") ||
+          (field === "custom_latency" && formData.sleepLatency === ">30") ||
           (field === "caffeineTime" && formData.hadCaffeine === "no") ||
           (field === "exerciseTime" && formData.exercised === "no") ||
           (field === "exerciseIntensity" && formData.exercised === "no")) {
@@ -98,6 +101,7 @@ export default function DailyInputPage() {
       wake_time: formData.wakeTime,
       restfulness: formData.restedRating,
       time_to_sleep: formData.sleepLatency,
+      custom_latency: formData.sleepLatency === ">30" ? Number(formData.customLatency) : null,
 
       caffeine: formData.hadCaffeine,
       caffeine_time: sanitizeTime(formData.caffeineTime),
@@ -109,7 +113,7 @@ export default function DailyInputPage() {
 
       bright_light: formData.brightLight,
       morning_sunlight: formData.morningLight,
-
+      had_alcohol: formData.had_alcohol,
       disturbances: formData.hadDisturbances === "yes" ? [{ duration: formData.awakeDuration }] : [],
       exercise: formData.exercised,
       exercise_intensity: sanitizeIntensity(formData.exerciseIntensity),
@@ -165,6 +169,21 @@ export default function DailyInputPage() {
                   <SelectItem value=">30">More than 30 min</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Only show input if user selected ">30" */}
+              {formData.sleepLatency === ">30" && (
+                <div className="mb-4">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Approximate time to fall asleep (minutes)
+                  </label>
+                  <Input
+                    type="number"
+                    min={31}
+                    placeholder="Enter minutes"
+                    value={formData.customLatency}
+                    onChange={(e) => handleChange("customLatency", e.target.value)}
+                  />
+                </div>
+              )}
               <Label>Rested Rating (1–5)</Label>
               <Select onValueChange={(val) => handleChange("restedRating", val)}>
                 <SelectTrigger className="mb-4">
@@ -278,6 +297,16 @@ export default function DailyInputPage() {
               </Select>
               <Label>Were you exposed to bright light before bed?</Label>
               <Select onValueChange={(val) => handleChange("brightLight", val)}>
+                <SelectTrigger className="mb-4">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+              <Label>Did you drink alcohol yesterday?</Label>
+              <Select onValueChange={(val) => handleChange("had_alcohol", val)}>
                 <SelectTrigger className="mb-4">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>

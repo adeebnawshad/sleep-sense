@@ -28,7 +28,15 @@ export default function Dashboard() {
         // Optional: parse/format fields like duration or time
         setSleepData(data.map((entry) => ({
           date: entry.bedtime?.split("T")[0],
-          duration: calculateSleepDuration(entry.bedtime, entry.wake_time),
+          duration: calculateSleepDuration(
+            entry.bedtime,
+            entry.wake_time,
+            entry.sleep_latency,
+            entry.custom_latency_minutes,
+            entry.disturbance_duration_minutes,
+            entry.nap_duration_minutes
+          ),
+
           restfulness: Number(entry.restfulness),
           caffeine: entry.caffeine_time ? parseHour(entry.caffeine_time) : null,
           stress: Number(entry.stress),
@@ -41,20 +49,56 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  function getSleepLatencyInMinutes(latency: string, custom?: number) {
+  switch (latency) {
+    case "<10":
+      return 5;
+    case "10-20":
+      return 15;
+    case "20-30":
+      return 25;
+    case ">30":
+      return custom || 30; // fallback in case custom is missing
+    default:
+      return 0;
+  }
+}
+
   // Helpers
-  const calculateSleepDuration = (bedtime: string, wakeTime: string) => {
-    if (!bedtime || !wakeTime) return null;
-    const bed = new Date(bedtime);
-    const wake = new Date(wakeTime);
-    const hours = (wake.getTime() - bed.getTime()) / (1000 * 60 * 60);
-    return parseFloat(hours.toFixed(1));
-  };
+  const calculateSleepDuration = (
+  bedtime: string,
+  wakeTime: string,
+  latency: string,
+  customLatency?: number,
+  disturbances?: number,
+  naps?: number
+) => {
+  if (!bedtime || !wakeTime) return null;
+
+  const bed = new Date(bedtime).getTime();
+  const wake = new Date(wakeTime).getTime();
+
+  const latencyMinutes = getSleepLatencyInMinutes(latency, customLatency);
+  const disturbanceMinutes = disturbances ?? 0;
+  const napMinutes = naps ?? 0;
+
+  const totalMinutes = (wake - bed) / (1000 * 60) - latencyMinutes - disturbanceMinutes + napMinutes;
+  const totalHours = totalMinutes / 60;
+
+  return parseFloat(totalHours.toFixed(1));
+};
+
 
   const parseHour = (timeStr: string) => {
     if (!timeStr) return null;
     const date = new Date(timeStr);
-    return date.getHours() + date.getMinutes() / 60;
+    let hour = date.getHours() + date.getMinutes() / 60;
+    if (hour < 6) {
+      hour += 24; // shift early-morning hours to appear after midnight
+    }
+    return hour;
   };
+
 
   const average = (arr: number[] | (number | null)[]) => {
   const valid = arr.filter((n): n is number => typeof n === 'number');
@@ -166,7 +210,7 @@ const calculateConsistency = (data: any[]) => {
               <LineChart data={sleepData}>
                 <CartesianGrid stroke="#444" />
                 <XAxis dataKey="date" />
-                <YAxis domain={[18, 30]} tickFormatter={formatHourLabel} />
+                <YAxis domain={[20, 30]} tickFormatter={formatHourLabel} />
                 <Tooltip formatter={(value: number) => formatHourLabel(value)} />
                 <Line type="monotone" dataKey="bedtime" stroke="#7c3aed" name="Bedtime" />
                 <Legend />
