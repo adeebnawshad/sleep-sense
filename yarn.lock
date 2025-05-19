@@ -18,6 +18,24 @@
     preact "10.24.3"
     preact-render-to-string "6.5.11"
 
+"@auth/core@0.39.1":
+  version "0.39.1"
+  resolved "https://registry.npmjs.org/@auth/core/-/core-0.39.1.tgz"
+  integrity sha512-McD8slui0oOA1pjR5sPjLPl5Zm//nLP/8T3kr8hxIsvNLvsiudYvPHhDFPjh1KcZ2nFxCkZmP6bRxaaPd/AnLA==
+  dependencies:
+    "@panva/hkdf" "^1.2.1"
+    jose "^6.0.6"
+    oauth4webapi "^3.3.0"
+    preact "10.24.3"
+    preact-render-to-string "6.5.11"
+
+"@auth/supabase-adapter@^1.9.1":
+  version "1.9.1"
+  resolved "https://registry.npmjs.org/@auth/supabase-adapter/-/supabase-adapter-1.9.1.tgz"
+  integrity sha512-T/sMidPqyWo68EbzTQXaD1MpI6486NBkVYnt9/WQJ5CEpU4uTLZltq3Hzs4FlBge4tKGSJzig8PN/WSP1pU+nw==
+  dependencies:
+    "@auth/core" "0.39.1"
+
 "@babel/runtime@^7.5.5", "@babel/runtime@^7.8.7":
   version "7.27.1"
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.27.1.tgz"
@@ -608,7 +626,7 @@
   dependencies:
     "@supabase/node-fetch" "^2.6.14"
 
-"@supabase/supabase-js@^2.49.4":
+"@supabase/supabase-js@^2.43.1", "@supabase/supabase-js@^2.49.4":
   version "2.49.4"
   resolved "https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.49.4.tgz"
   integrity sha512-jUF0uRUmS8BKt37t01qaZ88H9yV1mbGYnqLeuFWLcdV+x1P4fl0yP9DGtaEhFPZcwSom7u16GkLEH9QJZOqOkw==

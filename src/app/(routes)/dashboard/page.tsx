@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { format } from "date-fns";
@@ -9,10 +9,14 @@ import {
 } from "recharts";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [sleepData, setSleepData] = useState<any[]>([]);
+  const [selectedLatencyFactor, setSelectedLatencyFactor] = useState("sunlight");
+  const [selectedRestfulnessFactor, setSelectedRestfulnessFactor] = useState("caffeine");
+
 
   // Fetch data from Supabase on mount
   useEffect(() => {
@@ -26,23 +30,47 @@ export default function Dashboard() {
         console.error("Error fetching data:", error);
       } else {
         // Optional: parse/format fields like duration or time
-        setSleepData(data.map((entry) => ({
-          date: entry.bedtime?.split("T")[0],
-          duration: calculateSleepDuration(
-            entry.bedtime,
-            entry.wake_time,
-            entry.sleep_latency,
-            entry.custom_latency_minutes,
-            entry.disturbance_duration_minutes,
-            entry.nap_duration_minutes
-          ),
+        setSleepData(
+          data.map((entry) => {
+            const latencyMinutes = getSleepLatencyInMinutes(
+              entry.sleep_latency,
+              entry.custom_latency_minutes
+            );
 
-          restfulness: Number(entry.restfulness),
-          caffeine: entry.caffeine_time ? parseHour(entry.caffeine_time) : null,
-          stress: Number(entry.stress),
-          bedtime: parseHour(entry.bedtime),
-          wake: parseHour(entry.wake_time),
-        })));
+            return {
+              date: entry.bedtime?.split("T")[0],
+              duration: calculateSleepDuration(
+                entry.bedtime,
+                entry.wake_time,
+                entry.sleep_latency,
+                entry.custom_latency_minutes,
+                entry.disturbance_duration_minutes,
+                entry.nap_duration_minutes
+              ),
+              latency: latencyMinutes,
+              restfulness: Number(entry.restfulness),
+              caffeine: entry.caffeine ? parseHour(entry.caffeine_time) : null,
+              stress: Number(entry.stress),
+              bedtime: parseHour(entry.bedtime),
+              wake: parseHour(entry.wake_time),
+
+              // ✅ REQUIRED for graphs
+              sleep_latency_minutes: latencyMinutes,
+              sunlight_hours: entry.sunlight_hours ?? null,
+              bedtime_sunlight_gap: entry.bedtime_sunlight_gap ?? null,
+              bedtime_exercise_gap: entry.bedtime_exercise_gap ?? null,
+              exercise_intensity: entry.exercise_intensity ?? null,
+              bedtime_nap_gap: entry.bedtime_nap_gap ?? null,
+              nap_duration_minutes: entry.nap_duration_minutes ?? null,
+              screen_time: entry.screen_time ?? null,
+              blue_light_filter: entry.blue_light_filter ?? null,
+              bright_light_before_bed: entry.bright_light_before_bed ?? null,
+              room_temp: entry.room_temp ?? null,
+              alcohol: entry.alcohol ?? null,
+            };
+          })
+        );
+
       }
     };
 
@@ -150,6 +178,27 @@ const calculateConsistency = (data: any[]) => {
   return score.toFixed(0);
 };
 
+  const latencyFactors: { [key: string]: string } = {
+  sunlight: "sunlight_hours",
+  "bedtime - sunlight": "bedtime_sunlight_gap",
+  "caffeine time": "caffeine",
+  "bedtime - exercise time": "bedtime_exercise_gap",
+  "exercise intensity": "exercise_intensity",
+  "bedtime - nap end time": "bedtime_nap_gap",
+  "nap duration": "nap_duration_minutes",
+  "screen time": "screen_time",
+  "blue light filter": "blue_light_filter",
+  "bright light exposure": "bright_light_before_bed",
+  stress: "stress",
+  "room temperature": "room_temp",
+};
+
+const restfulnessFactors: { [key: string]: string } = {
+  caffeine: "caffeine",
+  alcohol: "alcohol",
+  "exercise intensity": "exercise_intensity",
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-blue-900 text-white p-6">
       {/* 1. Top Nav */}
@@ -159,7 +208,6 @@ const calculateConsistency = (data: any[]) => {
             <Link href="/settings">
                 <button className="bg-white text-black px-4 py-2 rounded">Settings</button>
             </Link>
-          <div className="w-10 h-10 rounded-full bg-gray-500" />
         </div>
       </div>
 
@@ -237,19 +285,7 @@ const calculateConsistency = (data: any[]) => {
 
 
         {/* b. Restfulness vs Factors */}
-        <div className="bg-gray-800 p-4 rounded-xl">
-          <h2 className="text-xl font-semibold mb-2">Restfulness vs Caffeine</h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <ScatterChart>
-              <CartesianGrid />
-              <XAxis type="number" dataKey="caffeine" name="Caffeine Time" unit="h" />
-              <YAxis type="number" dataKey="restfulness" name="Restfulness" />
-              <ZAxis type="number" dataKey="stress" range={[60, 200]} name="Stress" />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter name="User Data" data={sleepData} fill="#8884d8" />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
+        
       </div>
 
       {/* 4. Daily Breakdown */}
@@ -264,6 +300,11 @@ const calculateConsistency = (data: any[]) => {
         {/* Could expand with day-specific data */}
       </div>
 
+      {/* Sleep Latency vs Factor */}
+
+
+      {/* Restfulness vs Factor */}
+     
       {/* 5. Personalized Insights */}
       <div className="bg-blue-800 p-4 rounded-xl mb-8">
         <h2 className="text-xl font-semibold mb-2">Insights</h2>
@@ -271,21 +312,6 @@ const calculateConsistency = (data: any[]) => {
           <li>You sleep better when you exercise before 8PM</li>
           <li>Your restfulness drops after caffeine post-4PM</li>
         </ul>
-      </div>
-
-      {/* 6. Lifestyle Patterns */}
-      <div className="bg-gray-800 p-4 rounded-xl">
-        <h2 className="text-xl font-semibold mb-2">Lifestyle Patterns</h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={sleepData}>
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Bar dataKey="stress" fill="#ff7300" name="Stress Level" />
-            <Bar dataKey="caffeine" fill="#387908" name="Caffeine Time" />
-            <Tooltip />
-            <Legend />
-          </BarChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );
