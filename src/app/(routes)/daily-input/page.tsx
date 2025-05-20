@@ -1,6 +1,18 @@
-"use client";
 
-import { useState } from "react";
+
+import { useMemo, useState } from "react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ScatterChart,
+  Scatter,
+} from "recharts";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,6 +155,26 @@ export default function DailyInputPage() {
     alert("Something went wrong. Try again.");
   }
 };
+
+    interface DailyInput {
+    date: string;
+    bedtime: string;
+    morning_sunlight: string;
+    caffeine_time: string;
+    exercise_time: string;
+    exercise_intensity: number;
+    naps: { end_time: string; duration: number }[];
+    screen_use_time: string;
+    blue_light_filter: boolean;
+    bright_light: boolean;
+    stress: number;
+    room_temp: number;
+    time_to_sleep: number;
+    restfulness: number;
+    caffeine: boolean;
+    had_alcohol: boolean;
+    disturbances: { duration: number }[];
+  }
 
 
 
