@@ -1,31 +1,32 @@
-import { auth, signOut } from "@/auth";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import EmailLoginForm from "@/components/EmailLoginForm";
 import Link from "next/link";
+import { AnimatedBackground, MoonIcon } from "@/components/AnimatedBackground";
 
 export default async function Home() {
-  const session = await auth();
-  console.log(session);
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-indigo-950 to-black overflow-hidden px-4">
-      {/* Stars omitted for brevity */}
+      {/* Floating stars */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <AnimatedBackground />
+      </div>
 
+      {/* Card */}
       <div className="relative z-10 bg-white/10 backdrop-blur-md shadow-2xl rounded-3xl p-8 w-full max-w-md text-center border border-white/10">
-        {/* Moon icon omitted */}
+        <MoonIcon />
 
         <h1 className="text-3xl font-semibold text-white mb-3">Welcome to SleepSense</h1>
         <p className="text-indigo-200 mb-8">Your personalized sleep companion</p>
 
         {session ? (
-          <form action={async () => { "use server"; await signOut(); }}>
-            <button
-              type="submit"
-              className="w-full py-3 px-5 bg-red-800/80 text-white rounded-full hover:bg-red-700 transition duration-300 font-medium"
-            >
-              Logout
-            </button>
-          </form>
+          <p className="text-white/80">You're already signed in.</p>
         ) : (
           <>
             <GoogleLoginButton />

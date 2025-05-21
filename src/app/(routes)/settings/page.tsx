@@ -6,8 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation"; // Add this if you want to redirect after logout
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function SettingsPage() {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/"); // redirect to home or login page
+  };
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [tipsEnabled, setTipsEnabled] = useState(true);
   const [screenTracking, setScreenTracking] = useState(false);
@@ -26,6 +35,13 @@ export default function SettingsPage() {
         <h2 className="text-xl font-semibold mb-2">Account</h2>
         <p>Email: user@example.com</p>
         <Button variant="secondary" className="mt-2">Change Password</Button>
+        <Button
+          variant="destructive"
+          className="mt-2"
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="destructive" className="mt-2">Delete Account</Button>
