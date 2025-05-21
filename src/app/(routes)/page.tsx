@@ -1,4 +1,5 @@
 import { auth, signIn, signOut } from "@/auth";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 import EmailLoginForm from "@/components/EmailLoginForm";
 import Link from "next/link";
 
@@ -26,7 +27,7 @@ export default async function Home() {
           </form>
         ) : (
           <>
-            <form action={async () => { "use server"; await signIn("google"); }}>
+            <form action={async () => { "use server"; await signIn("google", { redirectTo: "/dashboard" }); }}>
               <button
                 type="submit"
                 className="w-full py-3 px-5 bg-white text-gray-900 rounded-full hover:bg-gray-200 transition duration-300 font-medium flex items-center justify-center gap-3"
@@ -41,6 +42,8 @@ export default async function Home() {
               <span className="px-3 text-white/50 text-sm">or</span>
               <div className="flex-grow h-px bg-white/20" />
             </div>
+
+            <GoogleLoginButton />
 
             {/* Email login component */}
             <EmailLoginForm />

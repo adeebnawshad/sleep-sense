@@ -9,6 +9,8 @@ import {
 } from "recharts";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Dashboard() {
@@ -16,7 +18,7 @@ export default function Dashboard() {
   const [sleepData, setSleepData] = useState<any[]>([]);
   const [selectedLatencyFactor, setSelectedLatencyFactor] = useState("sunlight");
   const [selectedRestfulnessFactor, setSelectedRestfulnessFactor] = useState("caffeine");
-
+  const router = useRouter();
 
   // Fetch data from Supabase on mount
   useEffect(() => {
@@ -76,6 +78,11 @@ export default function Dashboard() {
 
     fetchData();
   }, []);
+
+  const handleDateSelect = (date: Date) => {
+    const formatted = format(date, "yyyy-MM-dd");
+    router.push(`/daily-input?date=${formatted}`);
+  };
 
   function getSleepLatencyInMinutes(latency: string, custom?: number) {
   switch (latency) {
@@ -293,7 +300,10 @@ const restfulnessFactors: { [key: string]: string } = {
         <h2 className="text-xl font-semibold mb-2">Daily Breakdown</h2>
         <Calendar
           value={selectedDate}
-          onChange={setSelectedDate}
+          onChange={(date) => {
+            setSelectedDate(date as Date);
+            handleDateSelect(date as Date);
+          }}
           className="bg-white rounded-xl text-black p-2"
         />
         <div className="mt-4">Selected Date: {format(selectedDate, "PPP")}</div>

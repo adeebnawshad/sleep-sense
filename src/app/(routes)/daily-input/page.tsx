@@ -1,18 +1,6 @@
-
+"use client";
 
 import { useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ScatterChart,
-  Scatter,
-} from "recharts";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,9 +94,20 @@ export default function DailyInputPage() {
 
 
   const insertDailyInput = async (formData: any) => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      console.error("User not authenticated:", userError);
+      return { success: false, error: new Error("User not authenticated") };
+    }
+
   const { data, error } = await supabase
     .from('daily_inputs')
     .insert([{
+      user_id: user.id,
       bedtime: formData.bedtime,
       wake_time: formData.wakeTime,
       restfulness: formData.restedRating,
@@ -146,15 +145,15 @@ export default function DailyInputPage() {
 
 
   const handleFinish = async () => {
-  const result = await insertDailyInput(formData);
+    const result = await insertDailyInput(formData);
 
-  if (result.success) {
-    alert("Daily input saved!");
-    // You could also redirect to dashboard here using `navigate('/dashboard')` if using React Router
-  } else {
-    alert("Something went wrong. Try again.");
-  }
-};
+    if (result.success) {
+      alert("Daily input saved!");
+      router.push('/dashboard');
+    } else {
+      alert("Something went wrong. Try again.");
+    }
+  };
 
     interface DailyInput {
     date: string;
