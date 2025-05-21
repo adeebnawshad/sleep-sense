@@ -1,10 +1,11 @@
-import { auth, signIn, signOut } from "@/auth";
+import { auth, signOut } from "@/auth";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 import EmailLoginForm from "@/components/EmailLoginForm";
 import Link from "next/link";
 
 export default async function Home() {
   const session = await auth();
+  console.log(session);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-indigo-950 to-black overflow-hidden px-4">
@@ -27,15 +28,7 @@ export default async function Home() {
           </form>
         ) : (
           <>
-            <form action={async () => { "use server"; await signIn("google", { redirectTo: "/dashboard" }); }}>
-              <button
-                type="submit"
-                className="w-full py-3 px-5 bg-white text-gray-900 rounded-full hover:bg-gray-200 transition duration-300 font-medium flex items-center justify-center gap-3"
-              >
-                <img src="/google.png" alt="Google" className="w-5 h-5" />
-                Continue with Google
-              </button>
-            </form>
+            <GoogleLoginButton />
 
             <div className="flex items-center my-6">
               <div className="flex-grow h-px bg-white/20" />
@@ -43,9 +36,6 @@ export default async function Home() {
               <div className="flex-grow h-px bg-white/20" />
             </div>
 
-            <GoogleLoginButton />
-
-            {/* Email login component */}
             <EmailLoginForm />
 
             <p className="text-sm text-white/60 mt-6">
