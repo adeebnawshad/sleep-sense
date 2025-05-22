@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,33 @@ import { useRouter } from "next/navigation"; // Add this if you want to redirect
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function SettingsPage() {
-  const supabase = createClientComponentClient();
+  const [user, setUser] = useState<any>(null);
+  const [fullName, setFullName] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setFullName(user?.user_metadata?.full_name || "");
+    };
+    getUser();
+  }, []);
+
+  const handleUpdate = async () => {
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: fullName },
+    });
+
+    if (error) alert(error.message);
+    else alert("Name updated!");
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/"); // redirect to home or login page
+    router.push("/");
   };
+
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [tipsEnabled, setTipsEnabled] = useState(true);
   const [screenTracking, setScreenTracking] = useState(false);
@@ -33,15 +54,43 @@ export default function SettingsPage() {
       {/* Account Settings */}
       <div className="bg-gray-800 p-4 rounded-xl mb-6">
         <h2 className="text-xl font-semibold mb-2">Account</h2>
-        <p>Email: user@example.com</p>
+
+        {user ? (
+          <>
+            <p className="text-sm text-white/60 mb-6">Logged in as <span className="font-medium">{user.email}</span></p>
+
+            <div className="space-y-4 text-left">
+              <label className="block">
+                <span className="text-white/70">Full Name</span>
+                <input
+                  type="text"
+                  className="mt-1 block w-full bg-white/20 text-white rounded-xl px-4 py-2 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </label>
+
+              <button
+                onClick={handleUpdate}
+                className="w-full py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-500 transition"
+              >
+                Update Name
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full py-2 bg-red-600 text-white rounded-full hover:bg-red-500 transition"
+              >
+                Log Out
+              </button>
+            </div>
+          </>
+        ) : (
+          <p>Loading...</p>
+        )}
+
         <Button variant="secondary" className="mt-2">Change Password</Button>
-        <Button
-          variant="destructive"
-          className="mt-2"
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
+      
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="destructive" className="mt-2">Delete Account</Button>
