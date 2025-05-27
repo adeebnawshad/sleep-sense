@@ -155,28 +155,6 @@ export default function DailyInputPage() {
     }
   };
 
-    interface DailyInput {
-    date: string;
-    bedtime: string;
-    morning_sunlight: string;
-    caffeine_time: string;
-    exercise_time: string;
-    exercise_intensity: number;
-    naps: { end_time: string; duration: number }[];
-    screen_use_time: string;
-    blue_light_filter: boolean;
-    bright_light: boolean;
-    stress: number;
-    room_temp: number;
-    time_to_sleep: number;
-    restfulness: number;
-    caffeine: boolean;
-    had_alcohol: boolean;
-    disturbances: { duration: number }[];
-  }
-
-
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-cover bg-center text-white p-4 overflow-y-auto" style={{ backgroundImage: "url('/stars-bg.jpg')" }}>
       <Card className="bg-gray-900 text-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">

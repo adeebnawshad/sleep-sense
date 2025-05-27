@@ -10,79 +10,90 @@ import {
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   const [sleepData, setSleepData] = useState<any[]>([]);
-  const [selectedLatencyFactor, setSelectedLatencyFactor] = useState("sunlight");
-  const [selectedRestfulnessFactor, setSelectedRestfulnessFactor] = useState("caffeine");
   const router = useRouter();
 
   // Fetch data from Supabase on mount
   useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase
-        .from("daily_inputs")
-        .select("*")
-        .order("bedtime", { ascending: false });
+  const fetchData = async () => {
+    const { data, error } = await supabase
+      .from("daily_inputs")
+      .select("*")
+      .order("bedtime", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching data:", error);
-      } else {
-        // Optional: parse/format fields like duration or time
-        setSleepData(
-          data.map((entry) => {
-            const latencyMinutes = getSleepLatencyInMinutes(
-              entry.sleep_latency,
-              entry.custom_latency_minutes
-            );
+    if (error) {
+      console.error("Error fetching data:", error);
+      return;
+    }
 
-            return {
-              date: entry.bedtime?.split("T")[0],
-              duration: calculateSleepDuration(
-                entry.bedtime,
-                entry.wake_time,
-                entry.sleep_latency,
-                entry.custom_latency_minutes,
-                entry.disturbance_duration_minutes,
-                entry.nap_duration_minutes
-              ),
-              latency: latencyMinutes,
-              restfulness: Number(entry.restfulness),
-              caffeine: entry.caffeine ? parseHour(entry.caffeine_time) : null,
-              stress: Number(entry.stress),
-              bedtime: parseHour(entry.bedtime),
-              wake: parseHour(entry.wake_time),
+    const parsedData = data.map((entry) => {
+      const latencyMinutes = getSleepLatencyInMinutes(
+        entry.sleep_latency,
+        entry.custom_latency_minutes
+      );
 
-              // ✅ REQUIRED for graphs
-              sleep_latency_minutes: latencyMinutes,
-              sunlight_hours: entry.sunlight_hours ?? null,
-              bedtime_sunlight_gap: entry.bedtime_sunlight_gap ?? null,
-              bedtime_exercise_gap: entry.bedtime_exercise_gap ?? null,
-              exercise_intensity: entry.exercise_intensity ?? null,
-              bedtime_nap_gap: entry.bedtime_nap_gap ?? null,
-              nap_duration_minutes: entry.nap_duration_minutes ?? null,
-              screen_time: entry.screen_time ?? null,
-              blue_light_filter: entry.blue_light_filter ?? null,
-              bright_light_before_bed: entry.bright_light_before_bed ?? null,
-              room_temp: entry.room_temp ?? null,
-              alcohol: entry.alcohol ?? null,
-            };
-          })
-        );
+      return {
+        date: entry.bedtime?.split("T")[0],
+        duration: calculateSleepDuration(
+          entry.bedtime,
+          entry.wake_time,
+          entry.sleep_latency,
+          entry.custom_latency_minutes,
+          entry.disturbance_duration_minutes,
+          entry.nap_duration_minutes
+        ),
+        latency: latencyMinutes,
+        restfulness: Number(entry.restfulness),
+        caffeine: entry.caffeine_time ? parseHour(entry.caffeine_time) : null,
+        stress: Number(entry.stress),
+        bedtime: parseHour(entry.bedtime),
+        wake: parseWakeHour(entry.wake_time),
 
-      }
-    };
+        // ✅ Graph fields
+        sleep_latency_minutes: latencyMinutes,
+        sunlight_hours: entry.sunlight_hours ?? null,
+        bedtime_sunlight_gap: entry.bedtime_sunlight_gap ?? null,
+        bedtime_exercise_gap: entry.bedtime_exercise_gap ?? null,
+        exercise_intensity: entry.exercise_intensity ?? null,
+        bedtime_nap_gap: entry.bedtime_nap_gap ?? null,
+        nap_duration_minutes: entry.nap_duration_minutes ?? null,
+        screen_time: entry.screen_time ?? null,
+        blue_light_filter: entry.blue_light_filter ?? null,
+        bright_light_before_bed: entry.bright_light_before_bed ?? null,
+        room_temp: entry.room_temp ?? null,
+        alcohol: entry.alcohol ?? null,
+        disturbance_duration_minutes: entry.disturbance_duration_minutes ?? null,
+      };
+    });
 
-    fetchData();
-  }, []);
+    setSleepData(parsedData);
+  };
+
+  fetchData();
+}, []);
+
+  const getEntryForDate = (date: Date) => {
+    const formatted = format(date, "yyyy-MM-dd");
+    const entry = sleepData.find((d) => d.date === formatted);
+    setSelectedEntry(entry || null);
+  };
 
   const handleDateSelect = (date: Date) => {
-    const formatted = format(date, "yyyy-MM-dd");
-    router.push(`/daily-input?date=${formatted}`);
+    setSelectedDate(date);
+    getEntryForDate(date);
   };
+
+  useEffect(() => {
+    if (sleepData.length > 0) {
+      getEntryForDate(selectedDate);
+    }
+  }, [sleepData, selectedDate]);
 
   function getSleepLatencyInMinutes(latency: string, custom?: number) {
   switch (latency) {
@@ -134,6 +145,12 @@ export default function Dashboard() {
     return hour;
   };
 
+  const parseWakeHour = (timeStr: string) => {
+    if (!timeStr) return null;
+    const date = new Date(timeStr);
+    const hour = date.getHours() + date.getMinutes() / 60;
+    return hour;
+  };
 
   const average = (arr: number[] | (number | null)[]) => {
   const valid = arr.filter((n): n is number => typeof n === 'number');
@@ -205,6 +222,9 @@ const restfulnessFactors: { [key: string]: string } = {
   alcohol: "alcohol",
   "exercise intensity": "exercise_intensity",
 };
+
+const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+const entry = sleepData.find(d => d.date === selectedDateStr);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-blue-900 text-white p-6">
@@ -282,7 +302,12 @@ const restfulnessFactors: { [key: string]: string } = {
                 <XAxis dataKey="date" />
                 <YAxis domain={[4, 12]} tickFormatter={formatHourLabel} />
                 <Tooltip formatter={(value: number) => formatHourLabel(value)} />
-                <Line type="monotone" dataKey="wake" stroke="#10b981" name="Wake-up Time" />
+                <Line
+                  type="monotone"
+                  dataKey="wake"
+                  stroke="#10b981"
+                  name="Wake-up Time"
+                />
                 <Legend />
               </LineChart>
             </ResponsiveContainer>
@@ -306,8 +331,51 @@ const restfulnessFactors: { [key: string]: string } = {
           }}
           className="bg-white rounded-xl text-black p-2"
         />
-        <div className="mt-4">Selected Date: {format(selectedDate, "PPP")}</div>
-        {/* Could expand with day-specific data */}
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold mb-2">Selected Date: {format(selectedDate, "PPP")}</h3>
+          {entry ? (
+            <>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="entry">
+                  <AccordionTrigger className="hover:underline text-left">View Sleep Entry for {selectedDateStr}</AccordionTrigger>
+                  <AccordionContent className="text-sm space-y-2">
+                    <p><strong>Sleep Duration:</strong> {entry.duration} hrs</p>
+                    <p><strong>Restfulness:</strong> {entry.restfulness}</p>
+                    <p><strong>Bedtime:</strong> {formatHourLabel(entry.bedtime)}</p>
+                    <p><strong>Wake Time:</strong> {formatHourLabel(entry.wake)}</p>
+                    <p><strong>Sleep Latency:</strong> {entry.sleep_latency_minutes} mins</p>
+                    <p><strong>Nap Duration:</strong> {entry.nap_duration_minutes ?? "—"} mins</p>
+                    <p><strong>Caffeine Time:</strong> {formatHourLabel(entry.caffeine)}</p>
+                    <p><strong>Stress:</strong> {entry.stress}</p>
+                    <p><strong>Exercise Intensity:</strong> {entry.exercise_intensity ?? "—"}</p>
+                    <p><strong>Bright Light Before Bed:</strong> {entry.bright_light_before_bed ? "Yes" : "No"}</p>
+                    <p><strong>Room Temperature:</strong> {entry.room_temp ?? "—"}°C</p>
+                    <p><strong>Alcohol:</strong> {entry.alcohol ? "Yes" : "No"}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              <Link
+                href={`/daily-input?date=${selectedDateStr}`}
+                className="inline-block mt-4 bg-white text-black px-4 py-2 rounded hover:bg-gray-200"
+              >
+                Edit Entry
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="mb-2">No data found for {selectedDateStr}.</p>
+              <Link
+                href={`/daily-input?date=${selectedDateStr}`}
+                className="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Complete Daily Input
+              </Link>
+            </>
+          )}
+          
+        </div>
+
       </div>
 
       {/* Sleep Latency vs Factor */}
