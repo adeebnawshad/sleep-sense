@@ -2,8 +2,6 @@
 
 SleepSense is a full-stack web app designed to help users reflect on their daily habits and understand how they impact sleep quality. By logging lifestyle factors through a multi-step input form, users gain personalized insights and track their sleep trends over time.
 
-> 🚀 Built with Next.js, Supabase, React, and Tailwind CSS
-
 ---
 
 ## 🔍 Features
