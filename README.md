@@ -14,11 +14,11 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
   - Caffeine & alcohol intake  
   - Screen time and blue light exposure  
   - Exercise, stress levels, room temperature, sunlight exposure  
-  - Sleep disturbances and naps  
+  - Sleep disturbances and naps
 
 - 📊 **Personal Dashboard**
   View a calendar of daily entries and trends in:
-  - Sleep duration (bar graph)
+  - Sleep duration (bar graph) - Automatic Total Sleep Calculation: Total sleep is calculated with a custom formula: wake time - bedtime - sleep latency - disturbances + nap duration.
   - Bedtime trends (line graph)
   - Wake-up time trends (line graph)
   - Lifestyle factors and sleep breakdowns
