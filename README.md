@@ -18,9 +18,11 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
 
 - 📊 **Personal Dashboard**  
   View a calendar of daily entries and trends in:  
-  - Sleep latency and restfulness over time  
-  - Lifestyle factors and sleep breakdowns  
-
+  -Sleep duration (bar graph)
+  -Bedtime trends (line graph)
+  -Wake-up time trends (line graph)
+  -Lifestyle factors and sleep breakdowns
+  
 - 🔐 **User Authentication**  
   Secure Google login powered by Supabase and Google OAuth  
 
@@ -32,9 +34,8 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
 ## 🧪 Tech Stack
 
 - **Frontend:** React, Next.js, TypeScript, Tailwind CSS  
-- **Backend:** Supabase (PostgreSQL, Authentication)  
-- **Charts:** Chart.js  
-- **Deployment:** Vercel (planned)  
+- **Backend:** Supabase   
+- **Charts:** Chart.js 
 
 ---
 
