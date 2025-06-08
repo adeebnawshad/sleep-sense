@@ -40,13 +40,6 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
 
 ## 📂 Getting Started
 
-```bash
-git clone https://github.com/adeebnawshad/sleep-sense.git
-cd sleep-sense
-npm install
-npm run dev
-
-
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
