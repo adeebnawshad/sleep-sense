@@ -4,7 +4,7 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
 
 ---
 
-## 🔍 Features
+## Features
 
 ### 🛌 Daily Input Form  
 Multi-step form with time validation and dynamic fields to track:  
@@ -29,7 +29,7 @@ Responsive design built with Tailwind CSS and React for clean, intuitive visuals
 
 ---
 
-## 🧪 Tech Stack
+## Tech Stack
 
 - **Frontend:** React, Next.js, TypeScript, Tailwind CSS  
 - **Backend:** Supabase  
@@ -37,7 +37,7 @@ Responsive design built with Tailwind CSS and React for clean, intuitive visuals
 
 ---
 
-## 🚀 How It Works
+## How It Works
 
 Users log daily sleep and lifestyle inputs through a beautifully designed multi-step form. Data is securely stored in Supabase, and the dashboard visualizes trends using interactive charts. The app's logic transforms raw inputs into actionable insights — helping users identify patterns and make better sleep decisions.
 
