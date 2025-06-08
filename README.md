@@ -38,6 +38,11 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
 - **Charts:** Chart.js 
 
 ---
+## 🚀 How It Works
+
+Users log daily sleep and lifestyle inputs through a beautifully designed multi-step form. Data is securely stored in Supabase, and the dashboard visualizes trends using interactive charts. The app's logic transforms raw inputs into actionable insights — helping users identify patterns and make better sleep decisions.
+
+---
 
 ## 📂 Getting Started
 
