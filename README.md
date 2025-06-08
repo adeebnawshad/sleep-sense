@@ -44,6 +44,11 @@ Users log daily sleep and lifestyle inputs through a beautifully designed multi-
 
 ---
 
+🌌 Sleep better. Live better.
+SleepSense is more than just a tracker — it’s a step toward a healthier, more informed lifestyle.
+
+---
+
 ## 📂 Getting Started
 
 First, run the development server:
