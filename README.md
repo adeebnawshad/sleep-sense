@@ -16,12 +16,12 @@ SleepSense is a full-stack web app designed to help users reflect on their daily
   - Exercise, stress levels, room temperature, sunlight exposure  
   - Sleep disturbances and naps  
 
-- 📊 **Personal Dashboard**  
-  View a calendar of daily entries and trends in:  
-  -Sleep duration (bar graph)
-  -Bedtime trends (line graph)
-  -Wake-up time trends (line graph)
-  -Lifestyle factors and sleep breakdowns
+- 📊 **Personal Dashboard**
+  View a calendar of daily entries and trends in:
+  - Sleep duration (bar graph)
+  - Bedtime trends (line graph)
+  - Wake-up time trends (line graph)
+  - Lifestyle factors and sleep breakdowns
   
 - 🔐 **User Authentication**  
   Secure Google login powered by Supabase and Google OAuth  
