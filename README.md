@@ -1,39 +1,50 @@
-🌙 Welcome to SleepSense 🛌
-Your Personalized Guide to Better Sleep Through Data
+# 💤 SleepSense
 
-About SleepSense
-SleepSense is your daily companion for tracking sleep quality and uncovering how your lifestyle habits impact your rest. With an intuitive, multi-step input form and an insightful dashboard, SleepSense helps users reflect on their daily routines and build healthier sleep patterns over time.
+SleepSense is a full-stack web app designed to help users reflect on their daily habits and understand how they impact sleep quality. By logging lifestyle factors through a multi-step input form, users gain personalized insights and track their sleep trends over time.
 
-Whether you're a night owl, an early bird, or somewhere in between — SleepSense gives you the tools to better understand your sleep and make informed lifestyle choices.
+> 🚀 Built with Next.js, Supabase, React, and Tailwind CSS
 
-🧠 This project was built as a full-stack web application to explore data-driven wellness using modern web technologies.
+---
 
-🔑 Key Features
+## 🔍 Features
 
-📝 Multi-Step Daily Tracker
-Log your sleep habits, including bedtime, wake time, caffeine intake, exercise, screen time, stress, and more — all through a clean and engaging multi-step form.
+- 🛌 **Daily Input Form**  
+  Multi-step form with time validation and dynamic fields to track:  
+  - Bedtime, wake time, sleep latency  
+  - Caffeine & alcohol intake  
+  - Screen time and blue light exposure  
+  - Exercise, stress levels, room temperature, sunlight exposure  
+  - Sleep disturbances and naps  
 
-📊 Visual Sleep Insights
-Get an overview of your sleep trends and lifestyle behaviors with charts and summaries. Understand how your habits change over time.
+- 📊 **Personal Dashboard**  
+  View a calendar of daily entries and trends in:  
+  - Sleep latency and restfulness over time  
+  - Lifestyle factors and sleep breakdowns  
 
-⏱️ Sleep Latency Mapping
-SleepSense intelligently maps sleep latency (time to fall asleep) into standardized values for meaningful insights.
+- 🔐 **User Authentication**  
+  Secure Google login powered by Supabase and Google OAuth  
 
-🧮 Automatic Total Sleep Calculation
-Total sleep is calculated with a custom formula:
-wake time - bedtime - sleep latency - disturbances + nap duration.
+- 🧠 **Insightful UI**  
+  Responsive design built with Tailwind CSS and React for clean, intuitive visuals  
 
-💡 Correlation-Ready Design (Feature Paused)
-Originally designed to show correlations between lifestyle habits and sleep quality (e.g., caffeine vs. restfulness), this feature is planned for future updates due to implementation complexity.
+---
 
-🧰 Tech Stack
-Frontend: Next.js, React, Tailwind CSS, ShadCN UI
-Backend/Database: Supabase (PostgreSQL, Auth)
-Charts & Visualization: Chart.js
-Other Tools: Vercel (for deployment), Date-fns, React Hook Form
+## 🧪 Tech Stack
 
-🚀 How It Works
-Users log daily sleep and lifestyle inputs through a beautifully designed multi-step form. Data is securely stored in Supabase, and the dashboard visualizes trends using interactive charts. The app's logic transforms raw inputs into actionable insights — helping users identify patterns and make better sleep decisions.
+- **Frontend:** React, Next.js, TypeScript, Tailwind CSS  
+- **Backend:** Supabase (PostgreSQL, Authentication)  
+- **Charts:** Chart.js  
+- **Deployment:** Vercel (planned)  
+
+---
+
+## 📂 Getting Started
+
+```bash
+git clone https://github.com/adeebnawshad/sleep-sense.git
+cd sleep-sense
+npm install
+npm run dev
 
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
