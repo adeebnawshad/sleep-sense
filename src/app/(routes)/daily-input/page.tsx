@@ -49,7 +49,7 @@ export default function DailyInputPage() {
   };
 
   const isStepValid = () => {
-    const fields = requiredStepFields[step] || [];
+    const fields = (requiredStepFields as Record<number, string[]>)[step] || [];
     for (const field of fields) {
       if ((field === "awakeDuration" && formData.hadDisturbances === "no") ||
           (field === "custom_latency" && formData.sleepLatency === ">30") ||
