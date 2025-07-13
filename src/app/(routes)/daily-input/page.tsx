@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,47 +15,74 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+type FormData = {
+  bedtime: string;
+  wakeTime: string;
+  sleepLatency: string;
+  customLatency: string;
+  restedRating: string;
+  hadDisturbances: string;
+  awakeDuration: string;
+  morningLight: string;
+  hadCaffeine: string;
+  caffeineTime: string;
+  naps: { start: string; end: string }[];
+  lastMealTime: string;
+  exercised: string;
+  exerciseTime: string;
+  exerciseIntensity: string;
+  screenTime: string;
+  blueLightFilter: string;
+  brightLight: string;
+  had_alcohol: string;
+  roomTemp: string;
+  stressLevel: string;
+};
+
+const initialFormData: FormData = {
+  bedtime: "",
+  wakeTime: "",
+  sleepLatency: "",
+  customLatency: "",
+  restedRating: "",
+  hadDisturbances: "",
+  awakeDuration: "",
+  morningLight: "",
+  hadCaffeine: "",
+  caffeineTime: "",
+  naps: [],
+  lastMealTime: "",
+  exercised: "",
+  exerciseTime: "",
+  exerciseIntensity: "",
+  screenTime: "",
+  blueLightFilter: "",
+  brightLight: "",
+  had_alcohol: "",
+  roomTemp: "",
+  stressLevel: "",
+};
+
+const requiredStepFields: Record<number, (keyof FormData)[]> = {
+  1: ["bedtime", "wakeTime", "sleepLatency", "restedRating", "hadDisturbances", "awakeDuration"],
+  2: ["morningLight", "hadCaffeine", "caffeineTime", "lastMealTime", "exercised", "exerciseIntensity", "exerciseTime"],
+  3: ["screenTime", "blueLightFilter", "brightLight", "had_alcohol", "roomTemp", "stressLevel"],
+};
+
 export default function DailyInputPage() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<number>(1);
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    bedtime: "",
-    wakeTime: "",
-    sleepLatency: "",
-    customLatency: "",
-    restedRating: "",
-    hadDisturbances: "",
-    awakeDuration: "",
-    morningLight: "",
-    hadCaffeine: "",
-    caffeineTime: "",
-    naps: [],
-    lastMealTime: "",
-    exercised: "",
-    exerciseTime: "",
-    exerciseIntensity: "",
-    screenTime: "",
-    blueLightFilter: "",
-    brightLight: "",
-    had_alcohol: "",
-    roomTemp: "",
-    stressLevel: "",
-  });
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  const requiredStepFields = {
-    1: ["bedtime", "wakeTime", "sleepLatency", "restedRating", "hadDisturbances", "awakeDuration"],
-    2: ["morningLight", "hadCaffeine", "caffeineTime", "lastMealTime", "exercised", "exerciseIntensity", "exerciseTime"],
-    3: ["screenTime", "blueLightFilter", "brightLight", "had_alcohol", "roomTemp", "stressLevel"],
-  };
-
-  const isStepValid = () => {
-    const fields = (requiredStepFields as Record<number, string[]>)[step] || [];
+  const isStepValid = (): boolean => {
+    const fields = requiredStepFields[step] || [];
     for (const field of fields) {
-      if ((field === "awakeDuration" && formData.hadDisturbances === "no") ||
-          (field === "custom_latency" && formData.sleepLatency === ">30") ||
-          (field === "caffeineTime" && formData.hadCaffeine === "no") ||
-          (field === "exerciseTime" && formData.exercised === "no") ||
-          (field === "exerciseIntensity" && formData.exercised === "no")) {
+      if (
+        (field === "awakeDuration" && formData.hadDisturbances === "no") ||
+        (field === "customLatency" && formData.sleepLatency !== ">30") ||
+        (field === "caffeineTime" && formData.hadCaffeine === "no") ||
+        ((field === "exerciseTime" || field === "exerciseIntensity") && formData.exercised === "no")
+      ) {
         continue;
       }
       if (!formData[field]) return false;
@@ -63,7 +90,7 @@ export default function DailyInputPage() {
     return true;
   };
 
-  const handleChange = (key, value) => {
+  const handleChange = (key: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -71,29 +98,26 @@ export default function DailyInputPage() {
     setFormData((prev) => ({ ...prev, naps: [...prev.naps, { start: "", end: "" }] }));
   };
 
-  const handleNapChange = (index, field, value) => {
+  const handleNapChange = (index: number, field: "start" | "end", value: string) => {
     const updatedNaps = [...formData.naps];
     updatedNaps[index][field] = value;
     setFormData((prev) => ({ ...prev, naps: updatedNaps }));
   };
 
-  const removeNap = (index) => {
+  const removeNap = (index: number) => {
     const updatedNaps = formData.naps.filter((_, i) => i !== index);
     setFormData((prev) => ({ ...prev, naps: updatedNaps }));
   };
 
-  const sanitizeTime = (input: string) => {
-     if (typeof input === "string" && input.trim() !== "") {
-    return input;
-  }
-  return null;
+  const sanitizeTime = (input: string | null): string | null => {
+    return input?.trim() ? input : null;
   };
 
-  const sanitizeIntensity = (val: any) =>
-  typeof val === "string" && val.trim() ? val : null;
+  const sanitizeIntensity = (val: string): string | null => {
+    return val.trim() ? val : null;
+  };
 
-
-  const insertDailyInput = async (formData: any) => {
+  const insertDailyInput = async (formData: FormData) => {
     const {
       data: { user },
       error: userError,
@@ -104,57 +128,57 @@ export default function DailyInputPage() {
       return { success: false, error: new Error("User not authenticated") };
     }
 
-  const { data, error } = await supabase
-    .from('daily_inputs')
-    .insert([{
-      user_id: user.id,
-      bedtime: formData.bedtime,
-      wake_time: formData.wakeTime,
-      restfulness: formData.restedRating,
-      time_to_sleep: formData.sleepLatency,
-      custom_latency: formData.sleepLatency === ">30" ? Number(formData.customLatency) : null,
+    const { data, error } = await supabase
+      .from("daily_inputs")
+      .insert([
+        {
+          user_id: user.id,
+          bedtime: formData.bedtime,
+          wake_time: formData.wakeTime,
+          restfulness: formData.restedRating,
+          time_to_sleep: formData.sleepLatency,
+          custom_latency:
+            formData.sleepLatency === ">30" ? Number(formData.customLatency) : null,
+          caffeine: formData.hadCaffeine,
+          caffeine_time: sanitizeTime(formData.caffeineTime),
+          last_meal: formData.lastMealTime,
+          naps: formData.naps,
+          screen_use_time: formData.screenTime,
+          blue_light_filter: formData.blueLightFilter,
+          bright_light: formData.brightLight,
+          morning_sunlight: formData.morningLight,
+          had_alcohol: formData.had_alcohol,
+          disturbances:
+            formData.hadDisturbances === "yes"
+              ? [{ duration: formData.awakeDuration }]
+              : [],
+          exercise: formData.exercised,
+          exercise_intensity: sanitizeIntensity(formData.exerciseIntensity),
+          exercise_time: sanitizeTime(formData.exerciseTime),
+          stress: formData.stressLevel,
+          room_temp: formData.roomTemp,
+        },
+      ]);
 
-      caffeine: formData.hadCaffeine,
-      caffeine_time: sanitizeTime(formData.caffeineTime),
-      last_meal: formData.lastMealTime,
+    if (error) {
+      console.error("Insert error:", error.message, error.details);
+      return { success: false, error };
+    }
 
-      naps: formData.naps,
-      screen_use_time: formData.screenTime,
-      blue_light_filter: formData.blueLightFilter,
-
-      bright_light: formData.brightLight,
-      morning_sunlight: formData.morningLight,
-      had_alcohol: formData.had_alcohol,
-      disturbances: formData.hadDisturbances === "yes" ? [{ duration: formData.awakeDuration }] : [],
-      exercise: formData.exercised,
-      exercise_intensity: sanitizeIntensity(formData.exerciseIntensity),
-      exercise_time: sanitizeTime(formData.exerciseTime),
-
-      stress: formData.stressLevel,
-      room_temp: formData.roomTemp
-    }]);
-
-  if (error) {
-    console.error('Insert error:', error.message, error.details);
-    return { success: false, error };
-  }
-
-  return { success: true, data };
-};
-
-
+    return { success: true, data };
+  };
 
   const handleFinish = async () => {
     const result = await insertDailyInput(formData);
 
     if (result.success) {
       alert("Daily input saved!");
-      router.push('/dashboard');
+      router.push("/dashboard");
     } else {
       alert("Something went wrong. Try again.");
     }
   };
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen bg-cover bg-center text-white p-4 overflow-y-auto" style={{ backgroundImage: "url('/stars-bg.jpg')" }}>
       <Card className="bg-gray-900 text-white w-full max-w-2xl p-8 rounded-2xl shadow-lg">
